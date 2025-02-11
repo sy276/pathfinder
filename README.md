@@ -127,3 +127,6 @@ Download the HTML file **pathfinder.html** and open it in a web browser to start
 ### Limitations
 * The tool may not display all possible relationships between business objects, as there may be additional relationships in the tenant that were not captured in the three extracted reports.
 * Not all fields that connect two business objects can be used to create calculated fields. As a result, creating some calculated fields may not be possible, even if a traversal path exists.
+
+### Demo
+https://github.com/user-attachments/assets/98996fe6-57bf-4f57-af9e-7b537a97e07b
