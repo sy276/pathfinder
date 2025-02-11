@@ -123,3 +123,7 @@ Download the HTML file **pathfinder.html** and open it in a web browser to start
       * **Plot Path** adds the business objects from the selected path to the graph and updates connections between all business objects present on the graph.
       * **Field Paths** displays all possible field combinations that connect business objects from the selected path. Since multiple fields can link the same business objects, this screen presents every potential path, showing how fields establish those connections.
         * Each path includes a **Calculated Fields** button that, when clicked, displays instructions for creating calculated fields for the selected path. Users can choose between **LRV + ESI** or **ARI** calculated fields.
+
+### Limitations
+* The tool may not display all possible relationships between business objects, as there may be additional relationships in the tenant that were not captured in the three extracted reports.
+* Not all fields that connect two business objects can be used to create calculated fields. As a result, creating some calculated fields may not be possible, even if a traversal path exists.
