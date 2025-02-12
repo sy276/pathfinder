@@ -20,7 +20,7 @@ But what if the required data is not readily available on the primary or the imm
 
 ## ⚙️ Setup
 
-**Pathfinder** is a nearly standalone application that runs entirely on user's computer, with the exception of a few external libraries - specifically [Bootstrap](https://en.wikipedia.org/wiki/Bootstrap_(front-end_framework)) and [D3.js](https://en.wikipedia.org/wiki/D3.js) - which are imported during runtime to render various components. To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below.
+**Pathfinder** is a nearly standalone application that runs entirely on user's computer, with the exception of a few external libraries - specifically [Bootstrap](https://en.wikipedia.org/wiki/Bootstrap_(front-end_framework)) and [D3.js](https://en.wikipedia.org/wiki/D3.js) - which are imported during runtime to render various components. To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below. Alternatively, sample files can be downloaded from [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) to facilitate rapid usability.
 
 ### Download Object Relationships from Tenant
 
@@ -129,4 +129,4 @@ Download the HTML file **pathfinder.html** and open it in a web browser to start
 * Not all fields that connect two business objects can be used to create calculated fields. As a result, creating some calculated fields may not be possible, even if a traversal path exists.
 
 ### Demo
-https://github.com/user-attachments/assets/98996fe6-57bf-4f57-af9e-7b537a97e07b
+A demo is available on [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) for reference.
