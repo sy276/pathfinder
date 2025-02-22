@@ -506,10 +506,10 @@
                 }
                 // Insert only if not already present:
                 const exists = adjacencyList[d.B].some(
-                    (item) => item.target === d.R && item.field === d.F
+                    (item) => item.target === d.R 
                 );
                 if (!exists) {
-                    adjacencyList[d.B].push({ target: d.R, field: d.F });
+                    adjacencyList[d.B].push({ target: d.R });
                 }
             });
         }
@@ -1031,7 +1031,7 @@
         function updateGraph() {
             // LINKS
             const linkSel = linkGroup.selectAll(".link")
-                .data(graphLinks, d => d.source.id + "->" + d.target.id + "_" + d.field);
+                .data(graphLinks, d => d.source.id + "->" + d.target.id);
 
             linkSel.exit().remove();
 
@@ -1207,7 +1207,7 @@
                             l.source.id === sourceId && l.target.id === targetId && l.field === rel.field
                         );
                         if (!alreadyExists) {
-                            newLinks.push({ source: sourceId, target: targetId, field: rel.field });
+                            newLinks.push({ source: sourceId, target: targetId });
                         }
                     }
                 });
