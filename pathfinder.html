@@ -87,7 +87,23 @@
 
         #search {
             width: 100%;
-            border-radius: 4px;
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        #search-icon {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        #search:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 125, 255, 0.5);
+        }
+
+        #search-container:focus-within #search-icon {
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 125, 255, 0.5);
         }
 
         #suggestions {
@@ -195,7 +211,9 @@
 
     <div id="initial-upload-container" class="text-center">
         <div class="position-absolute top-0 end-0 m-5">
-            <a id="helpBtn" class="btn btn-outline-primary" title="Help" href="https://github.com/sy276/pathfinder?tab=readme-ov-file#-pathfinder" target="_blank" rel="noopener noreferrer">
+            <a id="helpBtn" class="btn btn-outline-primary" title="Help"
+                href="https://github.com/sy276/pathfinder?tab=readme-ov-file#-pathfinder" target="_blank"
+                rel="noopener noreferrer">
                 <i class="bi bi-info-circle"></i>&nbsp;&nbsp;Help
             </a>
         </div>
@@ -218,9 +236,13 @@
             </div>
 
             <div id="search-container">
-                <input class="form-control me-2 rounded-top border-primary" id="search" type="search"
-                    placeholder="🔍 Search for business objects.." aria-label="Search"
-                    title="Search for business objects to add to, remove from, or locate within the graph">
+                <div class="input-group d-flex align-items-center flex-nowrap">
+                    <span id="search-icon" class="text-primary input-group-text border-primary bg-white"><i
+                            class="bi bi-search"></i></span>
+                    <input class="form-control border-primary" id="search" type="search"
+                        placeholder="Search for business objects.." aria-label="Search"
+                        title="Search for business objects to add to, remove from, or locate within the graph">
+                </div>
                 <div id="suggestions" class="rounded-bottom"></div>
             </div>
 
@@ -308,7 +330,8 @@
                                 <label class="form-check-label small" for="ariCalcFieldsRadio">ARI</label>
                             </div>
                         </div>
-                        <div class="small">ℹ️ For multi-instance fields, an LRV + ESI can always be replaced with an ARI, and vice versa, even at the individual field level.</div>
+                        <div class="small">ℹ️ For multi-instance fields, an LRV + ESI can always be replaced with an
+                            ARI, and vice versa, even at the individual field level.</div>
                     </div>
                     <div id="lrvesiDiv">
                     </div>
@@ -506,7 +529,7 @@
                 }
                 // Insert only if not already present:
                 const exists = adjacencyList[d.B].some(
-                    (item) => item.target === d.R 
+                    (item) => item.target === d.R
                 );
                 if (!exists) {
                     adjacencyList[d.B].push({ target: d.R });
@@ -1461,7 +1484,7 @@
                 .style('stroke', 'black')
                 .style('stroke-width', 3)
                 .transition()
-                .delay(500)
+                .delay(1000)
                 .duration(300)
                 .style('stroke', '#fff')
                 .style('stroke-width', 1.5);
@@ -1486,7 +1509,6 @@
 
                     const textSpan = document.createElement('span');
                     textSpan.textContent = m;
-                    textSpan.classList.add('text-truncate');
                     textSpan.style.flex = '1 1 auto';
                     textSpan.style.maxWidth = '30%';
 
@@ -1520,7 +1542,7 @@
                     // Add
                     const addButton = document.createElement('button');
                     addButton.textContent = 'Add';
-                    addButton.classList.add('btn', 'btn-outline-success', 'btn-sm', 'me-2');
+                    addButton.classList.add('btn', 'btn-outline-success', 'btn-sm', 'me-2', 'w-100');
                     addButton.disabled = graphNodes.some(n => n.id === m);
                     addButton.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -1537,7 +1559,7 @@
                     // Remove
                     const removeButton = document.createElement('button');
                     removeButton.textContent = 'Remove';
-                    removeButton.classList.add('btn', 'btn-outline-danger', 'btn-sm', 'me-2');
+                    removeButton.classList.add('btn', 'btn-outline-danger', 'btn-sm', 'me-2', 'w-100');
                     removeButton.disabled = !graphNodes.some(n => n.id === m);
                     removeButton.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -1554,7 +1576,7 @@
                     // Locate
                     const locateButton = document.createElement('button');
                     locateButton.textContent = 'Locate';
-                    locateButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'me-2');
+                    locateButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'me-2', 'w-100');
                     locateButton.disabled = !graphNodes.some(n => n.id === m);
                     locateButton.addEventListener('click', (e) => {
                         e.stopPropagation();
