@@ -20,7 +20,7 @@ But what if the required data is not readily available on the primary or the imm
 
 ## ⚙️ Setup
 
-**Pathfinder** is a nearly standalone application that runs entirely on user's computer, with the exception of a few external libraries - specifically [Bootstrap](https://en.wikipedia.org/wiki/Bootstrap_(front-end_framework)) and [D3.js](https://en.wikipedia.org/wiki/D3.js) - which are imported during runtime to render various components. To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below. Alternatively, sample files can be downloaded from [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) to facilitate rapid usability.
+The latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html) or accessed as a hosted version on GitHub Pages [**here**](https://sy276.github.io/pathfinder/pathfinder.html). The **hosted version is recommended**, as it stays up to date with the latest changes to the application. The application relies on external libraries - specifically [Bootstrap](https://en.wikipedia.org/wiki/Bootstrap_(front-end_framework)) and [D3.js](https://en.wikipedia.org/wiki/D3.js) - which are imported during runtime to render various components. To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below. Alternatively, sample files can be downloaded from [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) to facilitate rapid usability.
 
 ### Download Object Relationships from Tenant
 
@@ -102,8 +102,8 @@ But what if the required data is not readily available on the primary or the imm
 * Save the report.
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
 
-### Download the HTML file
-Download the HTML file **pathfinder.html** and open it in a web browser to start using.
+### Run the application 
+Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.github.io/pathfinder/pathfinder.html) to start using the app.
 
 ## 📚 User Guide
 
