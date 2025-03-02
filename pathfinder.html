@@ -795,14 +795,16 @@
                             <tr>
                                 <td style="vertical-align: middle;">${p.join(" &rarr; ")}</td>
                                 <td style="vertical-align: middle;" class="text-end">
-                                    <button class="btn btn-sm btn-outline-primary me-2"
-                                            onclick="plotPathOnChart(${idx})" title="Plot this path on the graph">
-                                        Plot Path
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-primary"
-                                            onclick="viewAllFieldCombinations(${idx})" title="View all field level paths">
-                                        Field Paths
-                                    </button>
+                                    <div class="btn-group justify-content-end w-100" role="group" aria-label="Actions">
+                                        <button class="btn btn-sm btn-outline-primary me-2"
+                                                onclick="plotPathOnChart(${idx})" title="Plot this path on the graph">
+                                            Plot Path
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewAllFieldCombinations(${idx})" title="View all field level paths">
+                                            Field Paths
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}
@@ -853,9 +855,11 @@
                     <tr>
                         <td style="vertical-align: middle;">${displayPathString}</td>
                         <td style="vertical-align: middle;" class="text-end">
-                            <button class="btn btn-sm btn-outline-primary" data-path="${encodeURIComponent(pathString)}" onclick="viewPathDetailsButtonClick(this)">
-                                Calculated Fields
-                            </button>
+                            <div class="btn-group justify-content-end w-100" role="group" aria-label="Actions">
+                                <button class="btn btn-sm btn-outline-primary" data-path="${encodeURIComponent(pathString)}" onclick="viewPathDetailsButtonClick(this)">
+                                    Calculated Fields
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
