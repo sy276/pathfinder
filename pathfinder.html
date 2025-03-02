@@ -1462,6 +1462,18 @@
         // SEARCH BAR + AUTOCOMPLETE 
         const searchInput = document.getElementById('search');
         const suggestions = document.getElementById('suggestions');
+        const searchIcon = document.getElementById('search-icon');
+
+        searchInput.addEventListener('focus', () => {
+            searchIcon.style.display = 'none';
+            searchInput.style.borderRadius = '4px';
+        });
+
+        searchInput.addEventListener('blur', () => {
+            searchIcon.style.display = 'inline-block';
+            searchInput.style.borderTopLeftRadius = '0';
+            searchInput.style.borderBottomLeftRadius = '0';
+        });
 
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
