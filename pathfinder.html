@@ -1506,38 +1506,82 @@
                 .style('stroke-width', 1.5);
         }
 
+        let debounceTimeout;
         searchInput.addEventListener('input', () => {
-            const query = searchInput.value.toLowerCase().trim();
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                const query = searchInput.value.toLowerCase().trim();
 
-            if (!query) {
-                suggestions.style.display = 'none';
-                return;
-            }
+                if (!query) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
 
-            const matched = allBusinessObjects.filter(obj => obj.toLowerCase().includes(query));
+                const matched = allBusinessObjects.filter(obj => obj.toLowerCase().includes(query));
 
-            if (matched.length > 0) {
-                suggestions.innerHTML = '';
+                if (matched.length > 0) {
+                    suggestions.innerHTML = '';
 
-                matched.forEach(m => {
-                    const div = document.createElement('div');
-                    div.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'border-bottom', 'border-secondary', 'border-opacity-25');
+                    matched.forEach(m => {
+                        const div = document.createElement('div');
+                        div.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'border-bottom', 'border-secondary', 'border-opacity-25');
 
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = m;
-                    textSpan.style.flex = '1 1 auto';
-                    textSpan.style.maxWidth = '30%';
+                        const textSpan = document.createElement('span');
+                        textSpan.textContent = m;
+                        textSpan.style.flex = '1 1 auto';
+                        textSpan.style.maxWidth = '30%';
 
-                    // Clicking on the text toggles Add/Remove
-                    textSpan.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (!graphNodes.some(n => n.id === m)) {
-                            graphNodes.push({ id: m });
-                            expandNeighbors(m);
-                            addButton.disabled = true;
-                            removeButton.disabled = false;
-                            locateButton.disabled = false;
-                        } else {
+                        // Clicking on the text toggles Add/Remove
+                        textSpan.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (!graphNodes.some(n => n.id === m)) {
+                                graphNodes.push({ id: m });
+                                expandNeighbors(m);
+                                addButton.disabled = true;
+                                removeButton.disabled = false;
+                                locateButton.disabled = false;
+                            } else {
+                                graphNodes = graphNodes.filter(n => n.id !== m);
+                                graphLinks = graphLinks.filter(l => l.source.id !== m && l.target.id !== m);
+                                syncAllLinksBetweenExistingNodes();
+                                updateGraph();
+                                addButton.disabled = false;
+                                removeButton.disabled = true;
+                                locateButton.disabled = true;
+                            }
+                            suggestions.style.display = 'none';
+                        });
+
+                        div.appendChild(textSpan);
+
+                        // Buttons
+                        const buttonGroup = document.createElement('div');
+                        buttonGroup.classList.add('btn-group', 'w-50', 'justify-content-end');
+
+                        // Add
+                        const addButton = document.createElement('button');
+                        addButton.textContent = 'Add';
+                        addButton.classList.add('btn', 'btn-outline-success', 'btn-sm', 'me-2', 'w-100');
+                        addButton.disabled = graphNodes.some(n => n.id === m);
+                        addButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (!graphNodes.some(n => n.id === m)) {
+                                graphNodes.push({ id: m });
+                                expandNeighbors(m);
+                                addButton.disabled = true;
+                                removeButton.disabled = false;
+                                locateButton.disabled = false;
+                            }
+                            suggestions.style.display = 'none';
+                        });
+
+                        // Remove
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove';
+                        removeButton.classList.add('btn', 'btn-outline-danger', 'btn-sm', 'me-2', 'w-100');
+                        removeButton.disabled = !graphNodes.some(n => n.id === m);
+                        removeButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
                             graphNodes = graphNodes.filter(n => n.id !== m);
                             graphLinks = graphLinks.filter(l => l.source.id !== m && l.target.id !== m);
                             syncAllLinksBetweenExistingNodes();
@@ -1545,73 +1589,33 @@
                             addButton.disabled = false;
                             removeButton.disabled = true;
                             locateButton.disabled = true;
-                        }
-                        suggestions.style.display = 'none';
+                            suggestions.style.display = 'none';
+                        });
+
+                        // Locate
+                        const locateButton = document.createElement('button');
+                        locateButton.textContent = 'Locate';
+                        locateButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'me-2', 'w-100');
+                        locateButton.disabled = !graphNodes.some(n => n.id === m);
+                        locateButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            locateNode(m);
+                            suggestions.style.display = 'none';
+                        });
+
+                        buttonGroup.appendChild(addButton);
+                        buttonGroup.appendChild(removeButton);
+                        buttonGroup.appendChild(locateButton);
+
+                        div.appendChild(buttonGroup);
+                        suggestions.appendChild(div);
                     });
 
-                    div.appendChild(textSpan);
-
-                    // Buttons
-                    const buttonGroup = document.createElement('div');
-                    buttonGroup.classList.add('btn-group', 'w-50', 'justify-content-end');
-
-                    // Add
-                    const addButton = document.createElement('button');
-                    addButton.textContent = 'Add';
-                    addButton.classList.add('btn', 'btn-outline-success', 'btn-sm', 'me-2', 'w-100');
-                    addButton.disabled = graphNodes.some(n => n.id === m);
-                    addButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (!graphNodes.some(n => n.id === m)) {
-                            graphNodes.push({ id: m });
-                            expandNeighbors(m);
-                            addButton.disabled = true;
-                            removeButton.disabled = false;
-                            locateButton.disabled = false;
-                        }
-                        suggestions.style.display = 'none';
-                    });
-
-                    // Remove
-                    const removeButton = document.createElement('button');
-                    removeButton.textContent = 'Remove';
-                    removeButton.classList.add('btn', 'btn-outline-danger', 'btn-sm', 'me-2', 'w-100');
-                    removeButton.disabled = !graphNodes.some(n => n.id === m);
-                    removeButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        graphNodes = graphNodes.filter(n => n.id !== m);
-                        graphLinks = graphLinks.filter(l => l.source.id !== m && l.target.id !== m);
-                        syncAllLinksBetweenExistingNodes();
-                        updateGraph();
-                        addButton.disabled = false;
-                        removeButton.disabled = true;
-                        locateButton.disabled = true;
-                        suggestions.style.display = 'none';
-                    });
-
-                    // Locate
-                    const locateButton = document.createElement('button');
-                    locateButton.textContent = 'Locate';
-                    locateButton.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'me-2', 'w-100');
-                    locateButton.disabled = !graphNodes.some(n => n.id === m);
-                    locateButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        locateNode(m);
-                        suggestions.style.display = 'none';
-                    });
-
-                    buttonGroup.appendChild(addButton);
-                    buttonGroup.appendChild(removeButton);
-                    buttonGroup.appendChild(locateButton);
-
-                    div.appendChild(buttonGroup);
-                    suggestions.appendChild(div);
-                });
-
-                suggestions.style.display = 'block';
-            } else {
-                suggestions.style.display = 'none';
-            }
+                    suggestions.style.display = 'block';
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            }, 500);
         });
 
         // Show suggestions if user clicks inside input while it has text
