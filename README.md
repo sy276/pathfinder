@@ -108,6 +108,7 @@ Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.g
 ## 📚 User Guide
 
 * The first step is attaching the JSON files on page load. When the **⚡Upload files to get started.** prompt appears, the JSON files downloaded from the tenant should be attached.
+  * **For optimal performance and accuracy**, attach the **All Fields** and **All Data Sources** JSON files **first**. If the desired traversal paths are not returned, attach the **Classes** JSON file in addition to the other two files. This is because the Classes file often contains relationships that may not always work.
 * On the next page
   * The most commonly occurring business object (node) is displayed on the graph. Clicking on this business object reveals all connected business objects with links to and from it. From that menu, immediate neighbouring business objects can be added to the graph to establish a path. This process can be repeated to continue establishing paths. Clicking on these paths displays the list of fields connecting the business objects.
   * The interface also features two buttons - **Fileloader** and **Pathfinder** - along with a search bar.
