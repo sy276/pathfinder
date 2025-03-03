@@ -20,7 +20,7 @@ But what if the required data is not readily available on the primary or the imm
 
 ## ⚙️ Setup
 
-The latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html) or accessed as a hosted version on GitHub Pages [**here**](https://sy276.github.io/pathfinder/pathfinder.html). The **hosted version is recommended**, as it stays up to date with the latest changes to the application. The application relies on external libraries - specifically [Bootstrap](https://en.wikipedia.org/wiki/Bootstrap_(front-end_framework)) and [D3.js](https://en.wikipedia.org/wiki/D3.js) - which are imported during runtime to render various components. To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below. Sample JSON files are available on [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) for quick testing, but they are outdated and do not reflect the latest object relationships from the tenant. For accurate and up-to-date information, please download the files using the steps below.
+The latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html) or accessed as a hosted version on GitHub Pages [**here**](https://sy276.github.io/pathfinder/pathfinder.html). The **hosted version is recommended**, as it stays up to date with the latest changes to the application. To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below. Sample JSON files are available on [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) for quick testing, but they are outdated and do not reflect the latest object relationships from the tenant. 
 
 ### Download Object Relationships from Tenant
 
@@ -125,7 +125,7 @@ Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.g
         * Each path includes a **Calculated Fields** button that, when clicked, displays instructions for creating calculated fields for the selected path. Users can choose between **LRV + ESI** or **ARI** calculated fields.
 
 ### Limitations
-* The tool may not display all possible relationships between business objects, as there may be additional relationships in the tenant that were not captured in the three extracted reports.
+* The application may not display all possible relationships between business objects, as there may be additional relationships in the tenant that were not captured in the three extracted reports.
 * Not all fields that connect two business objects can be used to create calculated fields. As a result, creating some calculated fields may not be possible, even if a traversal path exists.
 
 ### Demo
