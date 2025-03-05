@@ -1,6 +1,6 @@
 # <img src="readme_files/pathfinder_logo.svg" style="width: 1em; height: auto;" alt="Pathfinder" /> Pathfinder
 
-**Pathfinder** is an application designed to **visualize and analyze relationships** between Workday **business objects** through an **interactive graph**. It enables users to **discover possible links** between business objects and aids in the creation of **ARI**, **LRV**, and **LRV + ESI** calculated fields.
+An application designed to **visualize and analyze relationships** between Workday **business objects** through an **interactive graph**. It enables users to **discover possible links** between business objects and aids in the creation of **ARI** and **LRV + ESI** calculated fields.
 
 ## 🎯 Objective
 
@@ -20,7 +20,7 @@ But what if the required data is not readily available on the primary or the imm
 
 ## ⚙️ Setup
 
-The latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html) or accessed as a hosted version on GitHub Pages [**here**](https://sy276.github.io/pathfinder/pathfinder.html). The **hosted version is recommended**, as it stays up to date with the latest changes to the application. To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below. Sample JSON files are available on [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) for quick testing, but they are outdated and do not reflect the latest object relationships from the tenant. 
+To use the application, an end-user only needs to download the latest object relationships data from the tenant and attach the resulting files during runtime. To extract most relationships from the tenant, three reports must be created. The instructions for creating these reports are provided below. Sample JSON files are available on [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) for quick testing but are outdated. 
 
 ### Download Object Relationships from Tenant
 
@@ -41,8 +41,9 @@ The latest version can be downloaded [here](https://github.com/sy276/pathfinder/
   | Field           | CF TC Field Name           | F                                 |
   | Field           | Related Business Object    | R                                 |
 * Add the following Filter conditions:
-  * **Business Object** is not empty
-  * **Related Business Object** is not empty
+  * **Business Object** `is not empty`
+  * **Related Business Object** `is not empty`
+  * **Authorized Usage** `any in the selection list` `Value specified in this filter` **Select all except those marked internal 
 * Save the report.
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
 
@@ -67,10 +68,11 @@ The latest version can be downloaded [here](https://github.com/sy276/pathfinder/
   |-------------------|-----------|
   | All Report Fields | R_G       |
 * Add the following Filter conditions:
-  * **All Report Fields** is not empty
-  * **Primary Business Object** is not blank
+  * **All Report Fields** `is not empty`
+  * **Primary Business Object** `is not blank`
 * Add the following Subfilter conditions on the **All Report Fields** Business Object:
-  * **Related Business Object** is not empty
+  * **Related Business Object** `is not empty`
+  * **Authorized Usage** `any in the selection list` `Value specified in this filter` **Select all except those marked internal 
 * Save the report.
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
 
@@ -95,22 +97,22 @@ The latest version can be downloaded [here](https://github.com/sy276/pathfinder/
   |-------------------------------------------------|-----------|
   | Class Report Fields for Class and Super Classes | R_G       |
 * Add the following Filter conditions:
-  * **Class Report Fields for Class and Super Classes** is not empty
-  * **Business Object Name** is not blank
+  * **Class Report Fields for Class and Super Classes** `is not empty`
+  * _[Optional but recommended]_ **Class Name** `equal to` `Value from another field` **Business Object Name** 
 * Add the following Subfilter conditions on the **Class Report Fields for Class and Super Classes** Business Object:
-  * **Related Business Object** is not empty
+  * **Related Business Object** `is not empty`
+  * **Authorized Usage** `any in the selection list` `Value specified in this filter` **Select all except those marked internal 
 * Save the report.
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
 
 ### Run the application 
-Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.github.io/pathfinder/pathfinder.html) to start using the app.
+Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.github.io/pathfinder/pathfinder.html) to access the application. Alternatively, the latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html). The **hosted version is recommended**, as it stays up to date with the latest changes. Regardless of which version is used, all data is processed on the client side (i.e., on the local computer). 
 
 ## 📚 User Guide
 
 * The first step is attaching the JSON files on page load. When the **⚡Upload files to get started.** prompt appears, the JSON files downloaded from the tenant should be attached.
-  * **For optimal performance and accuracy**, attach the **All Fields** and **All Data Sources** JSON files **first**. If the desired traversal paths are not returned, attach the **Classes** JSON file in addition to the other two files. This is because the Classes file often contains relationships that may not always work.
 * On the next page
-  * The most commonly occurring business object (node) is displayed on the graph. Clicking on this business object reveals all connected business objects with links to and from it. From that menu, immediate neighbouring business objects can be added to the graph to establish a path. This process can be repeated to continue establishing paths. Clicking on these paths displays the list of fields connecting the business objects.
+  * The most commonly occurring business object is displayed on the graph. Clicking on this business object reveals all connected business objects with links to and from it. From that menu, immediate neighbouring business objects can be added to the graph to establish a path. This process can be repeated to continue establishing paths. Clicking on these paths displays the list of fields connecting the business objects.
   * The interface also features two buttons - **Fileloader** and **Pathfinder** - along with a search bar.
   * The search bar enables searching for business objects and allows for adding, removing, and locating these objects on the graph.
   * **Fileloader** allows for the upload of additional files that may not have been added initially.
@@ -125,9 +127,9 @@ Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.g
       * **Field Paths** displays all possible field combinations that connect business objects from the selected path. Since multiple fields can link the same business objects, this screen presents every potential path, showing how fields establish those connections.
         * Each path includes a **Calculated Fields** button that, when clicked, displays instructions for creating calculated fields for the selected path. Users can choose between **LRV + ESI** or **ARI** calculated fields.
 
-### Limitations
-* The application may not display all possible relationships between business objects, as there may be additional relationships in the tenant that were not captured in the three extracted reports.
-* Not all fields that connect two business objects can be used to create calculated fields. As a result, creating some calculated fields may not be possible, even if a traversal path exists.
-
 ### Demo
 A demo is available on [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) for reference.
+
+## ⚠️ Limitations
+
+Extracting object relationships is challenging because clear and complete Object-to-Object and Object-to-Field relationships are not exposed through any report data sources. While the three reports above allow us to extract most of these relationships, there may still be more in the tenant that are not captured. There may also be broken relationships that, despite appearing in the application, do not always function in the tenant. Most of these issues stem from how the reports are built. As a result, the three reports should be considered a good starting point but are not a complete solution.
