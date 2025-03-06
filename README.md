@@ -106,7 +106,7 @@ To use the application, an end-user only needs to download the latest object rel
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
 
 ### Run the application 
-Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.github.io/pathfinder/pathfinder.html) to access the application. Alternatively, the latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html). The **[hosted version](https://sy276.github.io/pathfinder/pathfinder.html)** on github.io **is recommended**, as it stays up to date with the latest changes. Regardless of which version is used, all data is processed on the client side (i.e., on the local computer). 
+Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.github.io/pathfinder/pathfinder.html) to access the application. Alternatively, the latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html). The [hosted version](https://sy276.github.io/pathfinder/pathfinder.html) on github.io **is recommended**, as it stays up to date with the latest changes. Regardless of which version is used, all data is processed on the client side (i.e., on the local computer). 
 
 ## 📚 User Guide
 
