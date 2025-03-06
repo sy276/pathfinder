@@ -98,7 +98,7 @@ To use the application, an end-user only needs to download the latest object rel
   | Class Report Fields for Class and Super Classes | R_G       |
 * Add the following Filter conditions:
   * **Class Report Fields for Class and Super Classes** `is not empty`
-  * _[Optional but recommended]_ **Class Name** `equal to` `Value from another field` **Business Object Name** 
+  * _[Optional]_ **Class Name** `equal to` `Value from another field` **Business Object Name** 
 * Add the following Subfilter conditions on the **Class Report Fields for Class and Super Classes** Business Object:
   * **Related Business Object** `is not empty`
   * **Authorized Usage** `any in the selection list` `Value specified in this filter` **Select all except those marked internal 
@@ -111,6 +111,7 @@ Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.g
 ## 📚 User Guide
 
 * The first step is attaching the JSON files on page load. When the **⚡Upload files to get started.** prompt appears, the JSON files downloaded from the tenant should be attached.
+  * **For optimal performance and accuracy**, attach the **All Fields** and **All Data Sources** JSON files **first**. If the desired traversal paths are not returned, attach the **Classes** JSON file in addition to the other two files. The **Classes** file should be used as a **last resort**, as it often contains relationships that may not always work as expected. 
 * On the next page
   * The most commonly occurring business object is displayed on the graph. Clicking on this business object reveals all connected business objects with links to and from it. From that menu, immediate neighbouring business objects can be added to the graph to establish a path. This process can be repeated to continue establishing paths. Clicking on these paths displays the list of fields connecting the business objects.
   * The interface also features two buttons - **Fileloader** and **Pathfinder** - along with a search bar.
@@ -132,4 +133,4 @@ A demo is available on [Community](https://collaborate.workday.com/t5/General/Vi
 
 ## ⚠️ Limitations
 
-Extracting object relationships is challenging because clear and complete Object-to-Object and Object-to-Field relationships are not exposed through any report data sources. While the three reports above allow us to extract most of these relationships, there may still be more in the tenant that are not captured. There may also be broken relationships that, despite appearing in the application, do not always function in the tenant. Most of these issues stem from how the reports are built. As a result, the three reports should be considered a good starting point but are not a complete solution.
+Extracting object relationships is challenging because Object-to-Object and Object-to-Field relationships are not fully exposed through any report data sources. While the three reports above allow us to extract most of these relationships, there may still be more in the tenant that are not captured. There may also be broken relationships that, despite appearing in the application, do not always function in the tenant. Most of these issues arise from how the relationships are sourced. Unfortunately, no better alternative has been identified at this time, and as efforts to explore this area continue, the three reports should be considered a good starting point rather than a complete solution. 
