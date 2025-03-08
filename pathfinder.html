@@ -96,16 +96,6 @@
             border-bottom-left-radius: 4px;
         }
 
-        #search:focus {
-            outline: none;
-            box-shadow: 0 0 5px rgba(0, 125, 255, 0.5);
-        }
-
-        #search-container:focus-within #search-icon {
-            outline: none;
-            box-shadow: 0 0 5px rgba(0, 125, 255, 0.5);
-        }
-
         #suggestions {
             background: #fff;
             border-radius: 4px;
@@ -755,7 +745,7 @@
 
         let foundPaths = []; // store all BO paths
 
-        // On "Search" inside the modal, run BFS and display results
+        // On "Search" inside the modal, run DFS and display results
         const mapSearchBtn = document.getElementById("mapSearchBtn");
         const mapSearchResults = document.getElementById("mapSearchResults");
 
@@ -776,9 +766,17 @@
                 return;
             }
 
-            // Run BFS
+            // Run DFS
             const paths = findAllPathsDFS(startBO, endBO, depth);
             foundPaths = paths;
+            
+            // Sort paths alphabetically and by number of elements
+            paths.sort((a, b) => {
+                const aStr = a.join(' &rarr; ');
+                const bStr = b.join(' &rarr; ');
+                return aStr.localeCompare(bStr);
+            });
+            paths.sort((a, b) => a.length - b.length);
 
             if (paths.length === 0) {
                 mapSearchResults.innerHTML = `<div class="alert alert-info">No paths found for Depth <= ${depth}.</div>`;
@@ -834,6 +832,13 @@
                     uniqueCombos.add(pathString);
                     return true;
                 }
+            });
+
+            // Sort paths alphabetically 
+            combos.sort((a, b) => {
+                const aStr = a.join(" &rarr; ");
+                const bStr = b.join(" &rarr; ");
+                return aStr.localeCompare(bStr);
             });
 
             let html = `
