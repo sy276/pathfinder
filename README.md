@@ -128,9 +128,6 @@ Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.g
       * **Field Paths** displays possible field combinations that connect business objects from the selected path. Since multiple fields can link the same business objects, this screen presents every potential path, showing how fields establish those connections.
         * Each path includes a **Calculated Fields** button that, when clicked, displays instructions for creating calculated fields for the selected path. Users can choose between **LRV + ESI** or **ARI** calculated fields.
 
-### Demo
-A demo is available on [Community](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/ta-p/1960736) for reference.
-
 ## ⚠️ Limitations
 
 Extracting object relationships is challenging because Object-to-Object and Object-to-Field relationships are not fully exposed through any report data sources. While the three reports above allow us to extract most of these relationships, there may still be more in the tenant that are not captured. There may also be broken relationships that, despite appearing in the application, do not always function in the tenant. Most of these issues arise from how the relationships are sourced. Unfortunately, no better alternative has been identified at this time, and as efforts to explore this area continue, the three reports should be considered a good starting point rather than a complete solution. 
