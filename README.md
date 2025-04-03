@@ -43,7 +43,7 @@ To use the application, an end-user only needs to download the latest object rel
 * Add the following Filter conditions:
   * **Business Object** `is not empty`
   * **Related Business Object** `is not empty`
-  * **Authorized Usage** `any in the selection list` `Value specified in this filter` **Select all except those marked internal 
+  * **Authorized Usage** `any in the selection list` `Value specified in this filter` ->select all except those marked internal 
 * Save the report.
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
 
@@ -72,7 +72,7 @@ To use the application, an end-user only needs to download the latest object rel
   * **Primary Business Object** `is not blank`
 * Add the following Subfilter conditions on the **All Report Fields** Business Object:
   * **Related Business Object** `is not empty`
-  * **Authorized Usage** `any in the selection list` `Value specified in this filter` **Select all except those marked internal 
+  * **Authorized Usage** `any in the selection list` `Value specified in this filter` ->select all except those marked internal 
 * Save the report.
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
 
@@ -101,9 +101,12 @@ To use the application, an end-user only needs to download the latest object rel
   * _[Optional]_ **Class Name** `equal to` `Value from another field` **Business Object Name** 
 * Add the following Subfilter conditions on the **Class Report Fields for Class and Super Classes** Business Object:
   * **Related Business Object** `is not empty`
-  * **Authorized Usage** `any in the selection list` `Value specified in this filter` **Select all except those marked internal 
+  * **Authorized Usage** `any in the selection list` `Value specified in this filter` ->select all except those marked internal 
 * Save the report.
 * Click on related actions of the report and navigate to **Web Service** > **View URLs**. Click on the JSON link and enter credentials to download the JSON.
+
+#### Additional Considerations
+* There are some business objects that [share the same name](https://collaborate.workday.com/t5/General/Visualize-and-Analyze-Relationships-Between-Business-Objects/tac-p/1976592/highlight/true#M12744) despite being completely different. Even though the number of such cases is small, for increased accuracy, append the last six characters of the WID to the business object names so that each one remains truly unique in the context of this application.
 
 ### Run the application 
 Navigate to [https://sy276.github.io/pathfinder/pathfinder.html](https://sy276.github.io/pathfinder/pathfinder.html) to access the application. Alternatively, the latest version can be downloaded [here](https://github.com/sy276/pathfinder/blob/main/pathfinder.html). The [hosted version](https://sy276.github.io/pathfinder/pathfinder.html) on github.io **is recommended**, as it stays up to date with the latest changes. Regardless of which version is used, all data is processed on the client side (i.e., on the local computer). 
