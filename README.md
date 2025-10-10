@@ -8,11 +8,13 @@ Workday stores data in business objects. Business objects have fields and instan
 
 In the example below, the **Supplier Created By** field available on the **Supplier** business object is an instance field that links to a specific Worker in the **Worker** business object. This field identifies the Worker who created the Supplier and allows retrieving all other information related to that Worker from the Worker object onto the Supplier object. In other words, this field — available on the Supplier spreadsheet — acts as a bridge to bring in Worker data from Worker spreadsheet onto the Supplier spreadsheet.
  
-`{
-   "Business Object": "Supplier",
-   "Related Business Object": "Worker",
-   "Field": "Supplier Created By"
-}`
+```json
+{
+  "Business Object": "Supplier",
+  "Related Business Object": "Worker",
+  "Field": "Supplier Created By"
+}
+```
 
 In a report based on Supplier, the **Employee ID** of the Worker who created that Supplier may need to be retrieved. Since the Employee ID is not available directly on the Supplier object, accessing it requires moving from the Supplier object to the Worker object and retrieving the Employee ID field. The process of moving from one object to another within a complex network of interconnected objects is known as **Traversal**.
 
