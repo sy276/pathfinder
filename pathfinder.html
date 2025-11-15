@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Visualize and analyze relationships between Workday business objects through an interactive graph." />
+  <meta name="color-scheme" content="light dark" />
+  <title>Pathfinder</title>
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdn.sheetjs.com" crossorigin>
+  <link rel="preconnect" href="https://d3js.org" crossorigin>
+
+  <link rel="icon" type="image/svg+xml"
+    href='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22999%22%20height%3D%22999%22%20fill%3D%22white%22%20class%3D%22bi%20bi-bounding-box-circles%22%0A%20%20%20%20viewBox%3D%220%200%2016%2016%22%3E%0A%20%20%20%20%3Cline%20x1%3D%222.5%22%20y1%3D%2213.5%22%20x2%3D%2214%22%20y2%3D%228%22%20style%3D%22stroke%3A%237D7D7D%3Bstroke-width%3A0.8%22%20%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%225%22%20y1%3D%221.7%22%20x2%3D%222.5%22%20y2%3D%2213.5%22%20style%3D%22stroke%3A%237D7D7D%3Bstroke-width%3A0.8%22%20%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2214%22%20y1%3D%228%22%20x2%3D%225%22%20y2%3D%221.7%22%20style%3D%22stroke%3A%237D7D7D%3Bstroke-width%3A0.8%22%20%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%222.5%22%20cy%3D%2213.5%22%20r%3D%222.5%22%20fill%3D%22%23f46332%22%20%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%225%22%20cy%3D%221.7%22%20r%3D%221.7%22%20fill%3D%22%23ff6b6b%22%20%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2214%22%20cy%3D%228%22%20r%3D%222.0%22%20fill%3D%22%23ffc800%22%20%2F%3E%0A%3C%2Fsvg%3E' />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script src="https://d3js.org/d3.v7.min.js" defer></script>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"
+    defer></script>
+
+  <style>
+    :root {
+      --bg: #fefefe;
+      --ink: #222;
+      --muted: #6c757d;
+      --link: #999;
+      --link-hover: #666;
+      --tooltip-bg: #fafafa;
+      --tooltip-border: #ccc;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    #main-content {
+      display: none;
+    }
+
+    #initial-upload-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .custom-flex-layout {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+    }
+
+    #upload-container,
+    #map-container {
+      position: absolute;
+      top: 5%;
+      width: 25vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #upload-container {
+      left: 0;
+    }
+
+    #map-container {
+      left: 75%;
+    }
+
+    #search-container {
+      position: absolute;
+      top: 5%;
+      left: 25%;
+      width: 50vw;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    #search {
+      width: 100%;
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+
+    #search-icon {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+
+    #suggestions {
+      background: #fff;
+      border-radius: 4px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-top: none;
+      max-height: 40vh;
+      overflow-y: auto;
+      position: relative;
+      display: none;
+    }
+
+    #suggestions .item {
+      padding: .375rem .5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: 0.875rem;
+    }
+
+    #suggestions .item:hover,
+    #suggestions .item.active {
+      background: hsla(0, 0%, 90%, .5);
+    }
+
+    #chart {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .link {
+      stroke: var(--link);
+      stroke-opacity: .85;
+      fill: none;
+      stroke-width: 2.5px;
+      cursor: pointer;
+      transition: stroke .2s ease, stroke-width .2s ease;
+    }
+
+    .link:hover {
+      stroke: var(--link-hover);
+    }
+
+    .node {
+      cursor: pointer;
+      stroke: #fff;
+      stroke-width: 1.5px;
+      transition: r .25s ease, stroke .2s ease, stroke-width .2s ease;
+    }
+
+    .node:focus {
+      outline: none;
+      stroke: black;
+      stroke-width: 3;
+    }
+
+    .label {
+      font-size: 12px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .user-message {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+      z-index: 1000;
+      transition: opacity .35s ease-in-out;
+    }
+
+    .modal-dialog {
+      max-width: 85vw;
+      max-height: 85vh;
+    }
+
+    .modal-content {
+      height: 80vh;
+      overflow-y: auto;
+    }
+
+    #link-tooltip,
+    #node-tooltip {
+      cursor: grab;
+      position: absolute;
+      display: none;
+      background: var(--tooltip-bg);
+      border: 1px solid var(--tooltip-border);
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, .2);
+      z-index: 99999;
+      max-height: 240px;
+      overflow-y: auto;
+      pointer-events: auto;
+      transition: opacity .15s ease;
+      max-width: min(520px, calc(100vw - 16px));
+    }
+
+    .toolbar {
+      position: absolute;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 10;
+      display: flex;
+      gap: .5rem;
+    }
+
+    .toolbar .btn {
+      padding: .375rem .5rem;
+    }
+
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, .85);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #loadingOverlay {
+        background: rgba(0, 0, 0, .35);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    .link.highlight {
+      stroke: #000 !important;
+      stroke-opacity: 1 !important;
+      marker-end: url(#arrow-black) !important;
+    }
+
+    marker path {
+      fill: #999;
+      fill-opacity: 1;
+    }
+
+    marker#arrow-black path {
+      fill: #000 !important;
+    }
+
+    #suggestions .btn,
+    .copy-btn {
+      padding: .15rem .35rem;
+      font-size: .75rem;
+    }
+
+    .node:hover,
+    .node.selected {
+      stroke: #000 !important;
+      stroke-width: 2 !important;
+    }
+
+    .search-suggestions-button {
+      flex: 0 0 40% !important;
+      max-width: 40% !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="fileMessage" class="user-message bg-warning" role="status" aria-live="polite"></div>
+
+  <div id="initial-upload-container" class="text-center">
+    <div class="position-absolute top-0 end-0 m-5">
+      <a id="helpBtn" class="btn btn-outline-primary" title="Help"
+        href="https://github.com/sy276/pathfinder?tab=readme-ov-file#-pathfinder" target="_blank"
+        rel="noopener noreferrer">
+        <i class="bi bi-info-circle"></i>&nbsp;&nbsp;Help
+      </a>
+    </div>
+    <div class="d-flex flex-column align-items-center">
+      <div class="fs-5 fw-medium text-secondary mb-3">⚡ Upload files to get started.</div>
+      <button id="initial-uploadBtn" class="btn btn-outline-primary me-2 w-50" title="Upload files">
+        <i class="bi bi-upload"></i>
+      </button>
+      <input type="file" id="initial-fileInput" accept=".json,.xlsx,.xls,.zip" multiple style="display:none;" />
+    </div>
+  </div>
+
+  <div id="main-content">
+    <div class="d-flex custom-flex-layout mb-2">
+      <div id="upload-container">
+        <button id="uploadBtn" class="btn btn-outline-primary me-2 w-50" title="Upload files">
+          <i class="bi bi-upload"></i>&nbsp;&nbsp;Fileloader
+        </button>
+        <input type="file" id="fileInput" accept=".json,.xlsx,.xls,.zip" multiple style="display:none;" />
+      </div>
+
+      <div id="search-container">
+        <div class="input-group d-flex align-items-center flex-nowrap">
+          <span id="search-icon" class="text-primary input-group-text border-primary bg-white"><i
+              class="bi bi-search"></i></span>
+          <input class="form-control border-primary" id="search" type="search"
+            placeholder="Search for business objects.." aria-label="Search" title="Search for business objects"
+            autocomplete="off">
+        </div>
+        <div id="suggestions" class="rounded-bottom" role="listbox" aria-label="Search suggestions"></div>
+      </div>
+
+      <div id="map-container">
+        <button id="mapBtn" class="btn btn-outline-primary me-2 w-50" title="Find object relationships">
+          <i class="bi bi-compass"></i>&nbsp;&nbsp;Pathfinder
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button id="fitBtn" class="btn btn-outline-primary btn-sm" title="Fit to view (nodes)">
+        <i class="bi bi-aspect-ratio"></i>
+      </button>
+      <button id="resetBtn" class="btn btn-outline-primary btn-sm" title="Reset zoom">
+        <i class="bi bi-zoom-out"></i>
+      </button>
+    </div>
+
+    <div id="link-tooltip"></div>
+    <div id="node-tooltip"></div>
+    <div id="chart" aria-label="Graph canvas"></div>
+  </div>
+
+  <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="mapModalLabel">Pathfinder</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="startBO" class="form-label"><strong>Source</strong> Object</label>
+            <input class="form-control" list="businessObjects" id="startBO" placeholder="Search for source objects..">
+          </div>
+          <div class="mb-3">
+            <label for="endBO" class="form-label"><strong>Target</strong> Object</label>
+            <input class="form-control" list="businessObjects" id="endBO" placeholder="Search for target objects..">
+          </div>
+          <div class="mb-3">
+            <label for="depthLevel" class="form-label"><strong>Depth</strong> Level</label>
+            <input type="number" class="form-control" id="depthLevel" value="1" min="1" max="99" />
+          </div>
+          <button id="mapSearchBtn" class="btn btn-outline-primary w-100"><i class="bi bi-search"></i>&nbsp;&nbsp;Find
+            Paths</button>
+          <hr>
+          <div id="mapSearchResults" class="mt-2"></div>
+          <div id="pathMessage" class="user-message bg-success text-white" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="businessObjects"></datalist>
+
+  <div class="modal fade" id="allFieldCombinationsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Field Paths</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="allFieldCombosContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="pathDetailModal" tabindex="-1" aria-labelledby="pathDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="pathDetailModalLabel">Calculated Fields</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-secondary" role="alert">
+            <div class="d-flex mb-2">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="calcFieldsRadio" id="lrvesiCalcFieldsRadio"
+                  value="LRV + ESI" checked>
+                <label class="form-check-label small" for="lrvesiCalcFieldsRadio">LRV + ESI</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="calcFieldsRadio" id="ariCalcFieldsRadio" value="ARI">
+                <label class="form-check-label small" for="ariCalcFieldsRadio">ARI</label>
+              </div>
+            </div>
+            <div class="small">ℹ️ For multi-instance fields, an LRV + ESI can always be replaced with an ARI, and vice
+              versa, even at the individual field level.</div>
+          </div>
+          <div id="lrvesiDiv"></div>
+          <div id="ariDiv" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingOverlay" aria-live="assertive" aria-busy="true">
+    <div class="text-center">
+      <div class="spinner-border" role="status" aria-hidden="true"></div>
+      <div class="mt-2 small" id="loadingText">Processing..</div>
+      <span class="visually-hidden">Loading</span>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      "use strict";
+
+      const rawData = [];
+      let graphNodes = [];
+      let graphLinks = [];
+      let foundPaths = [];
+
+      let adjacencyList = {};
+      const reverseAdjacencyList = {};
+      let allBusinessObjects = [];
+      const edgeFieldMap = new Map();
+      const incomingMap = new Map();
+
+      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+      const keyBR = (B, R) => `${B}||${R}`;
+
+      const fileMessage = document.getElementById("fileMessage");
+      const pathMessage = document.getElementById("pathMessage");
+      const overlay = document.getElementById("loadingOverlay");
+      const loadingText = document.getElementById("loadingText");
+      const setLoading = (msg) => { loadingText.textContent = msg; };
+      const startLoading = (msg) => { setLoading(msg || "Processing.."); overlay.style.display = "flex"; };
+      const endLoading = () => { overlay.style.display = "none"; };
+      const show = el => { el.style.display = "block"; el.style.opacity = "1"; };
+      const hide = el => { el.style.opacity = "0"; setTimeout(() => { el.style.display = "none"; }, 200); };
+      const nextIdle = () => new Promise(r => (window.requestIdleCallback || ((cb) => setTimeout(cb, 0)))(r));
+
+      async function withLoading(message, fn) {
+        startLoading(message || "Processing..");
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        try { return await fn(); } finally { endLoading(); }
+      }
+
+      document.getElementById("uploadBtn").addEventListener("click", () => document.getElementById("fileInput").click(), { passive: true });
+      document.getElementById("initial-uploadBtn").addEventListener("click", () => document.getElementById("initial-fileInput").click(), { passive: true });
+      document.getElementById("fileInput").addEventListener("change", handleFileSelect);
+      document.getElementById("initial-fileInput").addEventListener("change", handleFileSelect);
+
+      async function handleFileSelect(event) {
+        startLoading("Reading files..");
+
+        let dataLoaded = 0;
+        const errored = [];
+        const selectedFiles = Array.from(event.target.files || []);
+        if (!selectedFiles.length) { endLoading(); return; }
+
+        const updateStatus = () => setLoading(`Parsing files (${dataLoaded} relationships)..`);
+        const noteError = (name, reason) => {
+          const msg = reason ? `${name} (${reason})` : name;
+          if (!errored.includes(msg)) errored.push(msg);
+          fileMessage.textContent = `Failed to load: ${errored.join(", ")}.`;
+          show(fileMessage); setTimeout(() => hide(fileMessage), 3200);
+        };
+
+        const normalizeHeader = (h) => (h || "").toString().replace(/\s+/g, " ").trim().toLowerCase();
+        const getCellString = (ws, r, c) => {
+          const addr = XLSX.utils.encode_cell({ r, c });
+          const cell = ws[addr];
+          return cell ? String(cell.v).trim() : "";
+        };
+        const extractPrimaryBOFromA1 = (ws) => {
+          const a1 = ws["A1"] && ws["A1"].v ? String(ws["A1"].v) : "";
+          return a1.replace(/^ *(View *Business *Object|Business *Object *Details): */i, "").trim();
+        };
+
+        function parseAndAppendJSON(txt, fileName) {
+          try {
+            const jsonData = JSON.parse(txt);
+            if (jsonData && Array.isArray(jsonData.Report_Entry)) {
+              for (const entry of jsonData.Report_Entry) {
+                if (entry.B && entry.R && entry.F) {
+                  if (entry.B !== entry.R) {
+                    rawData.push({ B: entry.B.trim(), R: entry.R.trim(), F: String(entry.F).trim() });
+                    dataLoaded++;
+                  }
+                } else if (entry.B && Array.isArray(entry.R_G)) {
+                  for (const sub of entry.R_G) {
+                    if (entry.B !== sub.R) {
+                      rawData.push({ B: entry.B.trim(), R: String(sub.R).trim(), F: String(sub.F).trim() });
+                      dataLoaded++;
+                    }
+                  }
+                } else {
+                  noteError(fileName, "unsupported schema");
+                }
+              }
+            } else {
+              noteError(fileName, "missing Report_Entry[]");
+            }
+          } catch { noteError(fileName, "invalid JSON"); }
+        }
+
+        function processWorksheet(ws, fileName) {
+          const ref = ws["!ref"]; if (!ref) return;
+          const range = XLSX.utils.decode_range(ref);
+          const headerRow = 3;
+          if (range.e.r < headerRow) return;
+
+          const headerMap = {};
+          for (let c = range.s.c; c <= range.e.c; c++) {
+            const h = getCellString(ws, headerRow, c);
+            if (h) headerMap[normalizeHeader(h)] = c;
+          }
+
+          const idxFieldName = headerMap["field name"];
+          const idxFieldType = headerMap["field type"];
+          const idxRelatedBO = headerMap["related business object"];
+          const idxAuthorized = headerMap["authorized usage"];
+          if ([idxFieldName, idxFieldType, idxRelatedBO, idxAuthorized].some(v => v == null)) return;
+
+          const primaryBO = extractPrimaryBOFromA1(ws);
+          if (!primaryBO) return;
+
+          for (let r = headerRow + 1; r <= range.e.r; r++) {
+            const fieldName = getCellString(ws, r, idxFieldName);
+            const fieldType = getCellString(ws, r, idxFieldType);
+            const relatedBO = getCellString(ws, r, idxRelatedBO);
+            const authorized = getCellString(ws, r, idxAuthorized);
+
+            if (!fieldName && !relatedBO && !fieldType && !authorized) continue;
+            if (!relatedBO) continue;
+            if ((authorized || "").toLowerCase().includes("internal")) continue;
+
+            const F = `${fieldName} (${fieldType})`.trim();
+            if (primaryBO && relatedBO && primaryBO !== relatedBO) {
+              rawData.push({ B: primaryBO.trim(), R: relatedBO.trim(), F });
+              dataLoaded++;
+            }
+          }
+        }
+
+        function parseExcelArrayBuffer(buf, fileName) {
+          try {
+            const wb = XLSX.read(buf, { type: "array" });
+            (wb.SheetNames || []).forEach(sn => {
+              const ws = wb.Sheets[sn];
+              if (ws && ws["A1"]) processWorksheet(ws, fileName);
+            });
+          } catch { noteError(fileName, "bad workbook"); }
+        }
+
+        async function processZipArrayBuffer(arrayBuffer, zipName) {
+          try {
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            const entries = Object.values(zip.files || {});
+            let processed = 0;
+            for (const entry of entries) {
+              if (entry.dir) continue;
+              const lower = entry.name.toLowerCase();
+              try {
+                if (lower.endsWith(".json")) {
+                  const txt = await entry.async("string");
+                  parseAndAppendJSON(txt, entry.name);
+                } else if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+                  const b = await entry.async("arraybuffer");
+                  parseExcelArrayBuffer(b, entry.name);
+                } else if (lower.endsWith(".zip")) {
+                  const b = await entry.async("arraybuffer");
+                  await processZipArrayBuffer(b, entry.name);
+                }
+              } catch { noteError(entry.name, "corrupt entry"); }
+              processed++; if (processed % 5 === 0) { updateStatus(); await nextIdle(); }
+            }
+          } catch { noteError(zipName, "unreadable zip"); }
+        }
+
+        function deduplicateRawData() {
+          const seen = new Set(); let write = 0;
+          for (let i = 0; i < rawData.length; i++) {
+            const d = rawData[i];
+            const B = (d.B ?? "").trim(), R = (d.R ?? "").trim(), F = (d.F ?? "").trim();
+            const k = `${B}||${R}||${F}`;
+            if (!seen.has(k)) { seen.add(k); d.B = B; d.R = R; d.F = F; rawData[write++] = d; }
+          }
+          rawData.length = write;
+        }
+
+        async function processSingleFile(file) {
+          const name = file.name || "";
+          const lower = name.toLowerCase();
+          const reader = new FileReader();
+
+          const p = new Promise((resolve) => {
+            reader.onerror = () => { noteError(name); resolve(); };
+
+            if (lower.endsWith(".json")) {
+              reader.onload = e => { parseAndAppendJSON(e.target.result, name); resolve(); };
+              reader.readAsText(file);
+            } else if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+              reader.onload = e => { parseExcelArrayBuffer(e.target.result, name); resolve(); };
+              reader.readAsArrayBuffer(file);
+            } else if (lower.endsWith(".zip")) {
+              reader.onload = async e => { await processZipArrayBuffer(e.target.result, name); resolve(); };
+              reader.readAsArrayBuffer(file);
+            } else {
+              noteError(name, "unsupported type"); resolve();
+            }
+          });
+
+          await p; updateStatus();
+          if (dataLoaded % 500 === 0) await nextIdle();
+        }
+
+        await Promise.all(selectedFiles.map(processSingleFile));
+
+        deduplicateRawData();
+        if (rawData.length > 0) {
+          rebuildDataStructures();
+          syncAllLinksBetweenExistingNodes();
+          updateGraph();
+
+          if (graphNodes.length === 0) {
+            const counts = rawData.reduce((acc, e) => (acc[e.B] = (acc[e.B] || 0) + 1, acc), {});
+            const mostFrequentB = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+            showBusinessObject(mostFrequentB);
+          }
+
+          document.getElementById("initial-upload-container").style.display = "none";
+          document.getElementById("main-content").style.display = "block";
+        }
+
+        endLoading();
+        if (event?.target) event.target.value = "";
+      }
+
+      function rebuildDataStructures() {
+        adjacencyList = {};
+        for (const k in reverseAdjacencyList) delete reverseAdjacencyList[k];
+        edgeFieldMap.clear(); incomingMap.clear();
+
+        for (const { B, R, F } of rawData) {
+          (adjacencyList[B] ||= []).push({ target: R });
+          (reverseAdjacencyList[R] ||= []).push(B);
+          const k = keyBR(B, R); if (!edgeFieldMap.has(k)) edgeFieldMap.set(k, new Set()); edgeFieldMap.get(k).add(F);
+          if (!incomingMap.has(R)) incomingMap.set(R, new Set()); incomingMap.get(R).add(B);
+        }
+        for (const B of Object.keys(adjacencyList)) {
+          const seen = new Set();
+          adjacencyList[B] = adjacencyList[B].filter(({ target }) => !seen.has(target) && seen.add(target));
+        }
+
+        const set = new Set(); for (const { B, R } of rawData) { set.add(B); set.add(R); }
+        allBusinessObjects = Array.from(set);
+        updateDatalist();
+      }
+
+      const getRelCount = (bo) =>
+        (adjacencyList[bo]?.length || 0) + ((incomingMap.get(bo)?.size) || 0);
+
+      const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      function scoreForQuery(name, q) {
+        if (!q) return 5;
+        const a = name.toLowerCase(), b = q.toLowerCase();
+        if (a === b) return 0;
+        if (a.startsWith(b)) return 1;
+        const idx = a.indexOf(b);
+        if (idx >= 0) return 2 + idx / Math.max(1, a.length);
+        return 99;
+      }
+
+      function updateDatalist() { reorderDatalist(''); }
+
+      function reorderDatalist(query) {
+        const dataList = document.getElementById('businessObjects');
+        const q = (query || '').trim().toLowerCase();
+        const items = q
+          ? allBusinessObjects.filter(n => n.toLowerCase().includes(q))
+          : allBusinessObjects.slice();
+
+        items.sort((a, b) => {
+          const sa = scoreForQuery(a, q), sb = scoreForQuery(b, q);
+          if (sa !== sb) return sa - sb;
+          const ra = getRelCount(a), rb = getRelCount(b);
+          if (ra !== rb) return rb - ra;
+          return collator.compare(a, b);
+        });
+
+        const frag = document.createDocumentFragment();
+        for (const bo of items) { const opt = document.createElement('option'); opt.value = bo; frag.appendChild(opt); }
+        dataList.innerHTML = ''; dataList.appendChild(frag);
+      }
+
+      function buildReachableFromEndSet(end) {
+        const s = new Set([end]); const q = [end];
+        while (q.length) { const cur = q.shift(); const ups = reverseAdjacencyList[cur] || []; for (const n of ups) { if (!s.has(n)) { s.add(n); q.push(n); } } }
+        return s;
+      }
+      const getFieldsBetween = (B, R) => (edgeFieldMap.get(keyBR(B, R)) ? Array.from(edgeFieldMap.get(keyBR(B, R))) : []).sort(collator.compare);
+
+      function findAllPathsDFS(start, end, maxDepth) {
+        if (!start || !end || maxDepth < 1) return [];
+        const results = [], seen = new Set(), canReach = buildReachableFromEndSet(end);
+        function dfs(path) {
+          const last = path[path.length - 1]; const used = path.length - 1;
+          if (last === end) { const k = path.join("->"); if (!seen.has(k)) { seen.add(k); results.push(path.slice()); } return; }
+          if (used === maxDepth) return;
+          for (const { target } of (adjacencyList[last] || [])) {
+            if (path.includes(target)) continue;
+            if (!canReach.has(target)) continue;
+            path.push(target); dfs(path); path.pop();
+          }
+        }
+        if (canReach.has(start)) dfs([start]);
+        return results;
+      }
+
+      function expandFieldsForBoPath(boPath) {
+        let expansions = [[boPath[0]]];
+        const unique = new Set();
+        for (let i = 0; i < boPath.length - 1; i++) {
+          const B = boPath[i], R = boPath[i + 1];
+          const fields = getFieldsBetween(B, R);
+          const used = fields.length ? fields : ["???"];
+          const next = [];
+          for (const partial of expansions) {
+            for (const f of used) {
+              const copy = partial.slice(); copy.push(f); copy.push(R);
+              const k = copy.join(" -> "); if (!unique.has(k)) { unique.add(k); next.push(copy); }
+            }
+          }
+          expansions = next;
+        }
+        return expansions;
+      }
+
+      const width = window.innerWidth, height = window.innerHeight;
+      const svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height).attr("role", "img").attr("aria-label", "Graph");
+      const container = svg.append("g").attr("class", "container");
+      const linkGroup = container.append("g").attr("class", "links");
+      const nodeGroup = container.append("g").attr("class", "nodes");
+      const labelGroup = container.append("g").attr("class", "labels");
+
+      const defs = svg.append("defs");
+
+      defs.append("marker")
+        .attr("id", "arrow")
+        .attr("viewBox", "0 -5 10 10").attr("refX", 11).attr("refY", 0)
+        .attr("markerWidth", 9).attr("markerHeight", 8).attr("markerUnits", "strokeWidth")
+        .attr("orient", "auto")
+        .append("path").attr("d", "M0,-3L6,0L0,3").attr("fill", "#999");
+
+      defs.append("marker")
+        .attr("id", "arrow-black")
+        .attr("viewBox", "0 -5 10 10").attr("refX", 11).attr("refY", 0)
+        .attr("markerWidth", 9).attr("markerHeight", 8).attr("markerUnits", "strokeWidth")
+        .attr("orient", "auto")
+        .append("path").attr("d", "M0,-3L6,0L0,3").attr("fill", "#000");
+
+      const simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d => d.id).distance(250).strength(0.7))
+        .force("charge", d3.forceManyBody().strength(-500))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide(50))
+        .force("x", d3.forceX(width / 2).strength(0.02))
+        .force("y", d3.forceY(height / 2).strength(0.02));
+
+      function resize() {
+        const w = window.innerWidth, h = window.innerHeight;
+        d3.select("#chart svg").attr("width", w).attr("height", h);
+        simulation.force("center", d3.forceCenter(w / 2, h / 2))
+          .force("x", d3.forceX(w / 2).strength(0.02))
+          .force("y", d3.forceY(h / 2).strength(0.02));
+        simulation.alpha(1).restart();
+      }
+      window.addEventListener("resize", resize, { passive: true });
+
+      const zoomHandler = d3.zoom().scaleExtent([0.1, 4]).on("zoom", (event) => { container.attr("transform", event.transform); });
+      svg.call(zoomHandler);
+
+      const dragHandler = d3.drag()
+        .on("start", (event, d) => { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+        .on("end", (event, d) => { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; });
+
+      let pinnedLink = null, pinnedNode = null;
+
+      let linkSelMerged = linkGroup.selectAll(".link");
+      let nodeSelMerged = nodeGroup.selectAll(".node");
+      let labelSelMerged = labelGroup.selectAll("text");
+
+      function highlightLinkEl(el, on) {
+        const sel = d3.select(el);
+        sel.classed('highlight', !!on);
+        if (on) sel.raise();
+
+        const d = sel.datum();
+        if (!d) return;
+
+        const s = (typeof d.source === "string") ? d.source : d.source.id;
+        const t = (typeof d.target === "string") ? d.target : d.target.id;
+
+        linkSelMerged.each(function (otherD) {
+          const os = (typeof otherD.source === "string") ? otherD.source : otherD.source.id;
+          const ot = (typeof otherD.target === "string") ? otherD.target : otherD.target.id;
+
+          if (os === t && ot === s) {
+            const otherSel = d3.select(this);
+
+            otherSel
+              .classed('highlight', !!on)
+              .style('pointer-events', on ? 'none' : null);
+
+            if (on) otherSel.raise();
+          }
+        });
+      }
+
+      function updateGraph() {
+        const linkSel = linkGroup.selectAll(".link").data(graphLinks, d => `${d.source.id}->${d.target.id}`);
+        linkSel.exit().remove();
+        const linkEnter = linkSel.enter().append("path")
+          .attr("class", "link").attr("marker-end", "url(#arrow)")
+          .on("mouseover", (event, d) => {
+            if (!pinnedLink && !pinnedNode) {
+              highlightLinkEl(event.currentTarget, true);
+              showLinkTooltip(event, d);
+            }
+          })
+          .on("mousemove", (event) => {
+            if (!pinnedLink && !pinnedNode) updateLinkTooltipPosition(event);
+          })
+          .on("mouseout", (event) => {
+            if (!pinnedLink && !pinnedNode) {
+              highlightLinkEl(event.currentTarget, false);
+              hideLinkTooltip();
+            }
+          })
+          .on("click", (event, d) => {
+            event.stopPropagation();
+            pinnedNode = null; hideNodeTooltip();
+            if (pinnedLink && pinnedLink.__el) highlightLinkEl(pinnedLink.__el, false);
+            if (pinnedLink === d) { pinnedLink = null; hideLinkTooltip(); }
+            else {
+              pinnedLink = d; pinnedLink.__el = event.currentTarget;
+              highlightLinkEl(event.currentTarget, true);
+              showLinkTooltip(event, d);
+            }
+          });
+
+        linkSelMerged = linkEnter.merge(linkSel)
+          .attr("stroke-width", d => {
+            const n = getFieldsBetween(d.source.id, d.target.id).length;
+            return Math.min(6, 2 + Math.log2(1 + n));
+          });
+
+        const nodeSel = nodeGroup.selectAll(".node").data(graphNodes, d => d.id);
+        nodeSel.exit().remove();
+        const nodeEnter = nodeSel.enter().append("circle")
+          .attr("class", "node").attr("r", 0).style("fill", getStableColor)
+          .on("mouseover", (event, d) => { if (!pinnedLink && !pinnedNode) showNodeTooltip(event, d); })
+          .on("mousemove", (event) => { if (!pinnedLink && !pinnedNode) updateNodeTooltipPosition(event); })
+          .on("mouseout", () => { if (!pinnedLink && !pinnedNode) hideNodeTooltip(); })
+          .on("click", (event, d) => {
+            event.stopPropagation();
+            expandNeighbors(d.id);
+
+            if (pinnedLink) {
+              highlightLinkEl(pinnedLink.__el, false);
+              pinnedLink = null;
+              hideLinkTooltip();
+            }
+
+            if (pinnedNode === d) {
+              pinnedNode = null;
+              hideNodeTooltip();
+              d3.select(event.currentTarget).classed('selected', false);
+            } else {
+              pinnedNode = d;
+              showNodeTooltip(event, d);
+              d3.selectAll('.node').classed('selected', false);
+              d3.select(event.currentTarget).classed('selected', true);
+            }
+          })
+          .call(dragHandler);
+
+        nodeSelMerged = nodeEnter.merge(nodeSel);
+        nodeEnter.transition().duration(200).attr("r", 15);
+
+        const labelSel = labelGroup.selectAll("text").data(graphNodes, d => d.id);
+        labelSel.exit().remove();
+        const labelEnter = labelSel.enter().append("text").attr("class", "label").text(d => d.id).attr("dy", -20).attr("text-anchor", "middle");
+        labelSelMerged = labelEnter.merge(labelSel);
+
+        simulation.nodes(graphNodes).on("tick", ticked);
+        simulation.force("link").links(graphLinks);
+        simulation.alpha(1).restart();
+      }
+
+      function ticked() {
+        linkSelMerged.attr("d", d => `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`);
+        nodeSelMerged.attr("cx", d => d.x).attr("cy", d => d.y);
+        labelSelMerged.attr("x", d => d.x).attr("y", d => d.y);
+      }
+
+      const __colorMap = new Map(); let __colorIdx = 0;
+      function getStableColor(d, i) {
+        const key = d?.id ?? `idx-${i}`;
+        if (__colorMap.has(key)) return __colorMap.get(key);
+        const k = __colorIdx++, hue = (k * 137.508) % 360;
+        const color = `hsl(${hue}, 85%, 52%)`;
+        __colorMap.set(key, color);
+        return color;
+      }
+
+      window.plotPathOnChart = function (idx) {
+        const pathArray = foundPaths[idx]; if (!pathArray) return;
+        for (const nodeId of pathArray) {
+          if (!graphNodes.some(n => n.id === nodeId)) { graphNodes.push({ id: nodeId }); }
+        }
+        syncAllLinksBetweenExistingNodes(); updateGraph();
+        pathMessage.textContent = "Path plotted successfully."; show(pathMessage); setTimeout(() => hide(pathMessage), 3000);
+      };
+
+      function expandNeighbors(nodeId) { syncAllLinksBetweenExistingNodes(); updateGraph(); }
+      function showBusinessObject(bo) { graphNodes = [{ id: bo }]; graphLinks = []; expandNeighbors(bo); }
+
+      function syncAllLinksBetweenExistingNodes() {
+        const nodeById = new Map(graphNodes.map(n => [n.id, n]));
+        const keyOf = l => {
+          const s = (typeof l.source === "string") ? l.source : l.source.id;
+          const t = (typeof l.target === "string") ? l.target : l.target.id;
+          return `${s}->${t}`;
+        };
+        const existing = new Set(graphLinks.map(keyOf));
+
+        const newLinks = [];
+        for (const { id: sourceId } of graphNodes) {
+          const neighbors = adjacencyList[sourceId] || [];
+          for (const { target: targetId } of neighbors) {
+            if (!nodeById.has(targetId)) continue;
+            const k = `${sourceId}->${targetId}`;
+            if (!existing.has(k)) {
+              newLinks.push({ source: nodeById.get(sourceId), target: nodeById.get(targetId) });
+              existing.add(k);
+            }
+          }
+        }
+        graphLinks = graphLinks.concat(newLinks);
+      }
+
+      const linkTooltip = d3.select("#link-tooltip");
+      function showLinkTooltip(event, linkData) { linkTooltip.style("display", "block"); updateLinkTooltipContent(linkData); updateLinkTooltipPosition(event); }
+      function updateLinkTooltipContent(linkData) {
+        const s = linkData.source.id, t = linkData.target.id;
+        const forwardFields = getFieldsBetween(s, t);
+        const reverseFields = getFieldsBetween(t, s);
+        let html = `<span class="me-auto fs-6">fields between <strong>${s}</strong> and <strong>${t}</strong></span>`;
+        if (forwardFields.length) {
+          html += `<div class="accordion mt-2" id="acc-fwd">
+        <div class="accordion-item">
+          <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-fwd">
+            <span class="text-start pe-2 fs-6"><strong>fields connecting</strong> ${s} <strong>to</strong> ${t}</span>
+          </button></h2>
+          <div id="c-fwd" class="accordion-collapse collapse" data-bs-parent="#acc-fwd">
+            <div class="accordion-body">${forwardFields.map(f => `<div class="fs-6 py-1">${f}</div>`).join("")}</div>
+          </div>
+        </div>
+      </div>`;
+        }
+        if (reverseFields.length) {
+          html += `<div class="accordion mt-2" id="acc-rev">
+        <div class="accordion-item">
+          <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-rev">
+            <span class="text-start pe-2 fs-6"><strong>fields connecting</strong> ${t} <strong>to</strong> ${s}</span>
+          </button></h2>
+          <div id="c-rev" class="accordion-collapse collapse" data-bs-parent="#acc-rev">
+            <div class="accordion-body">${reverseFields.map(f => `<div class="fs-6 py-1">${f}</div>`).join("")}</div>
+          </div>
+        </div>
+      </div>`;
+        }
+        linkTooltip.html(html);
+      }
+
+      function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+      function placeElInViewport(el, x, y) {
+        const rect = el.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const left = clamp(x, 8, vw - rect.width - 8);
+        const top = clamp(y, 8, vh - rect.height - 8);
+        el.style.left = `${left}px`;
+        el.style.top = `${top}px`;
+      }
+
+      function updateLinkTooltipPosition(event) { placeElInViewport(linkTooltip.node(), event.pageX + 10, event.pageY + 10); }
+      function hideLinkTooltip() { linkTooltip.style("display", "none"); }
+
+      const nodeTooltip = d3.select("#node-tooltip");
+      function showNodeTooltip(event, nodeData) { nodeTooltip.style("display", "block"); updateNodeTooltipContent(nodeData); updateNodeTooltipPosition(event); }
+      function updateNodeTooltipContent(nodeData) {
+        const nodeId = nodeData.id;
+        const forward = adjacencyList[nodeId] ? Array.from(new Set(adjacencyList[nodeId].map(d => d.target))).sort(collator.compare) : [];
+        const incoming = incomingMap.has(nodeId) ? Array.from(incomingMap.get(nodeId)).filter(s => s !== nodeId).sort(collator.compare) : [];
+        const genList = (items) => !items.length ? '' : items.map(itemId => {
+          const present = graphNodes.some(n => n.id === itemId);
+          const cls = present ? 'btn-outline-danger' : 'btn-outline-success';
+          const icon = present ? 'bi-dash-circle' : 'bi-plus-circle';
+          const act = present ? `removeNode('${itemId}')` : `addNode('${itemId}')`;
+          const label = present ? 'Remove' : 'Add';
+          const tofrom = present ? 'from' : 'to';
+          return `<div class="d-flex align-items-center mb-1">
+        <span class="me-auto pe-2 fs-6">${itemId}</span>
+        <button class="btn ${cls} btn-sm me-1" onclick="${act}" title="${label} object ${tofrom} the graph"><i class="bi ${icon}"></i></button>
+      </div>`;
+        }).join("");
+
+        let html = `
+    <div class="d-flex align-items-center mb-1">
+      <span class="me-auto pe-2 fs-6">business object <strong>${nodeId}</strong></span>
+      <button class="btn btn-outline-danger btn-sm" onclick="removeNode('${nodeId}')" title="Remove object from the graph"><i class="bi bi-dash-circle"></i></button>
+    </div>`;
+
+        if (forward.length) {
+          const safeId = nodeId.replace(/[^a-zA-Z0-9]/g, '');
+          html += `<div class="accordion mt-2" id="acc-from-${safeId}">
+        <div class="accordion-item">
+          <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-from-${safeId}">
+            <span class="text-start pe-2 fs-6"><strong>links from</strong> ${nodeId} <strong>to</strong></span>
+          </button></h2>
+          <div id="c-from-${safeId}" class="accordion-collapse collapse" data-bs-parent="#acc-from-${safeId}">
+            <div class="accordion-body">${genList(forward)}</div>
+          </div>
+        </div>
+      </div>`;
+        }
+        if (incoming.length) {
+          const safeId = nodeId.replace(/[^a-zA-Z0-9]/g, '');
+          html += `<div class="accordion mt-2" id="acc-to-${safeId}">
+        <div class="accordion-item">
+          <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-to-${safeId}">
+            <span class="text-start pe-2 fs-6"><strong>links to</strong> ${nodeId} <strong>from</strong></span>
+          </button></h2>
+          <div id="c-to-${safeId}" class="accordion-collapse collapse" data-bs-parent="#acc-to-${safeId}">
+            <div class="accordion-body">${genList(incoming)}</div>
+          </div>
+        </div>
+      </div>`;
+        }
+        nodeTooltip.html(html);
+      }
+      window.addNode = function (nodeId) { if (!graphNodes.some(n => n.id === nodeId)) { graphNodes.push({ id: nodeId }); expandNeighbors(nodeId); updateNodeTooltipContent({ id: nodeId }); } };
+      window.removeNode = function (nodeId) { graphNodes = graphNodes.filter(n => n.id !== nodeId); graphLinks = graphLinks.filter(l => l.source.id !== nodeId && l.target.id !== nodeId); syncAllLinksBetweenExistingNodes(); updateGraph(); updateNodeTooltipContent({ id: nodeId }); };
+      function updateNodeTooltipPosition(event) { placeElInViewport(nodeTooltip.node(), event.pageX + 10, event.pageY + 10); }
+      function hideNodeTooltip() { nodeTooltip.style("display", "none"); d3.selectAll(".node").classed("selected", false); }
+
+      document.addEventListener("click", (e) => {
+        const clickedLink = e.target.closest(".link");
+        const inLinkTooltip = e.target.closest("#link-tooltip");
+        const inNodeTooltip = e.target.closest("#node-tooltip");
+        const clickedNode = e.target.closest(".node");
+        if (!clickedLink && !inLinkTooltip && !clickedNode && !inNodeTooltip) {
+          if (pinnedLink && pinnedLink.__el) highlightLinkEl(pinnedLink.__el, false);
+          pinnedLink = null; pinnedNode = null; hideLinkTooltip(); hideNodeTooltip();
+        }
+      }, { passive: true });
+
+      function makeTooltipDraggable(id) {
+        const el = document.getElementById(id);
+        let dx = 0, dy = 0, drag = false;
+        el.addEventListener("mousedown", (ev) => {
+          drag = true;
+          const r = el.getBoundingClientRect();
+          dx = ev.clientX - r.left; dy = ev.clientY - r.top;
+          el.style.cursor = "grabbing";
+          ev.preventDefault();
+        });
+        document.addEventListener("mousemove", (ev) => {
+          if (!drag) return;
+          const r = el.getBoundingClientRect();
+          const targetLeft = ev.clientX - dx;
+          const targetTop = ev.clientY - dy;
+          const left = Math.max(8, Math.min(targetLeft, window.innerWidth - r.width - 8));
+          const top = Math.max(8, Math.min(targetTop, window.innerHeight - r.height - 8));
+          el.style.left = `${left}px`;
+          el.style.top = `${top}px`;
+        });
+        document.addEventListener("mouseup", () => { drag = false; el.style.cursor = "grab"; });
+        el.style.cursor = "grab";
+      }
+      makeTooltipDraggable("link-tooltip");
+      makeTooltipDraggable("node-tooltip");
+
+      document.getElementById("mapBtn").addEventListener("click", () => new bootstrap.Modal(document.getElementById('mapModal')).show());
+      const mapSearchBtn = document.getElementById("mapSearchBtn");
+      const mapSearchResults = document.getElementById("mapSearchResults");
+
+      const PATH_PAGE_SIZE = 100;
+      let pathPager = { items: [], page: 1, pageSize: PATH_PAGE_SIZE };
+
+      function initAndRenderPathPager(items) {
+        pathPager = { items, page: 1, pageSize: PATH_PAGE_SIZE };
+        renderPathsPage();
+      }
+
+      function renderPathsPage() {
+        const total = pathPager.items.length;
+        if (!total) {
+          mapSearchResults.innerHTML = `<div class="alert alert-info">No paths found.</div>`;
+          return;
+        }
+        const pages = Math.max(1, Math.ceil(total / pathPager.pageSize));
+        if (pathPager.page > pages) pathPager.page = pages;
+        const start = (pathPager.page - 1) * pathPager.pageSize;
+        const end = Math.min(start + pathPager.pageSize, total);
+        const slice = pathPager.items.slice(start, end);
+
+        const rows = slice.map((p, idxInPage) => {
+          const idx = start + idxInPage + 1;
+          const actualIdx = foundPaths.findIndex(fp =>
+            fp.length === p.length && fp.every((val, i) => val === p[i])
+          );
+
+          return `
+          <tr>
+            <td style="vertical-align:middle; width:3.5rem;"><span>${idx}</span></td>
+            <td style="vertical-align:middle;">${p.join(" &rarr; ")}</td>
+            <td style="vertical-align:middle;" class="text-end">
+              <div class="btn-group justify-content-end w-100" role="group">
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="plotPathOnChart(${actualIdx})">Plot Path</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewAllFieldCombinations(${actualIdx})">Field Paths</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join("");
+
+        const pager = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="small text-muted">Showing <strong>${start + 1}</strong>–<strong>${end}</strong> of <strong>${total}</strong> object paths</div>
+          <div class="btn-group" role="group" aria-label="Pagination">
+            <button class="btn btn-outline-secondary btn-sm" ${pathPager.page <= 1 ? 'disabled' : ''} onclick="window.__pathPrev()">Prev</button>
+            <span class="btn btn-outline-secondary btn-sm disabled">Page ${pathPager.page} / ${pages}</span>
+            <button class="btn btn-outline-secondary btn-sm" ${pathPager.page >= pages ? 'disabled' : ''} onclick="window.__pathNext()">Next</button>
+          </div>
+        </div>`;
+
+        mapSearchResults.innerHTML = pager + `<table class="table table-bordered table-sm"><tbody>${rows}</tbody></table>` + pager;
+      }
+      window.__pathPrev = () => { if (pathPager.page > 1) { pathPager.page--; renderPathsPage(); } };
+      window.__pathNext = () => {
+        const pages = Math.max(1, Math.ceil(pathPager.items.length / pathPager.pageSize));
+        if (pathPager.page < pages) { pathPager.page++; renderPathsPage(); }
+      };
+
+      mapSearchBtn.addEventListener("click", async () => {
+        mapSearchResults.innerHTML = "";
+        const startBO = document.getElementById("startBO").value.trim();
+        const endBO = document.getElementById("endBO").value.trim();
+        const depth = parseInt(document.getElementById("depthLevel").value, 10);
+
+        if (!startBO || !endBO || Number.isNaN(depth)) { mapSearchResults.innerHTML = `<div class="alert alert-warning">Please fill out all fields.</div>`; return; }
+        if (startBO === endBO) { mapSearchResults.innerHTML = `<div class="alert alert-warning">Source and Target can't be the same.</div>`; return; }
+
+        await withLoading("Finding paths..", () => {
+          const paths = findAllPathsDFS(startBO, endBO, depth);
+          foundPaths = paths;
+
+          const sorted = paths.slice().sort((a, b) => (a.length - b.length) || collator.compare(a.join(" → "), b.join(" → ")));
+          initAndRenderPathPager(sorted);
+        });
+      });
+
+      const COMBO_PAGE_SIZE = 100;
+      let combosPager = { items: [], page: 1, pageSize: COMBO_PAGE_SIZE };
+
+      function renderCombosPage() {
+        const container = document.getElementById("allFieldCombosContainer");
+        const total = combosPager.items.length;
+        if (!total) { container.innerHTML = `<div class="alert alert-info">No field paths found.</div>`; return; }
+
+        const pages = Math.max(1, Math.ceil(total / combosPager.pageSize));
+        if (combosPager.page > pages) combosPager.page = pages;
+        const start = (combosPager.page - 1) * combosPager.pageSize;
+        const end = Math.min(start + combosPager.pageSize, total);
+        const slice = combosPager.items.slice(start, end);
+
+        let html = `<div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="small text-muted">Showing <strong>${start + 1}</strong>–<strong>${end}</strong> of <strong>${total}</strong> field paths</div>
+      <div class="btn-group" role="group" aria-label="Pagination">
+        <button class="btn btn-outline-secondary btn-sm" ${combosPager.page <= 1 ? 'disabled' : ''} onclick="window.__comboPrev()">Prev</button>
+        <span class="btn btn-outline-secondary btn-sm disabled">Page ${combosPager.page} / ${pages}</span>
+        <button class="btn btn-outline-secondary btn-sm" ${combosPager.page >= pages ? 'disabled' : ''} onclick="window.__comboNext()">Next</button>
+      </div>
+    </div>`;
+
+        html += `<table class="table table-bordered table-sm"><tbody>`;
+        for (let i = 0; i < slice.length; i++) {
+          const arr = slice[i];
+          const display = arr.map((item, j) => j % 2 === 1 ? `<strong>${item}</strong>` : item).join(" &rarr; ");
+          const rawPath = arr.join(" &rarr; ");
+          const idx = start + i + 1;
+          html += `<tr>
+        <td style="vertical-align:middle; width:3.5rem;"><span>${idx}</span></td>
+        <td>${display}</td>
+        <td class="text-end">
+          <div class="btn-group" role="group">
+            <button class="btn btn-sm btn-outline-primary" data-path="${encodeURIComponent(rawPath)}" onclick="viewPathDetailsButtonClick(this)">Calculated Fields</button>
+          </div>
+        </td>
+      </tr>`;
+        }
+        html += `</tbody></table>`;
+
+        container.innerHTML = html;
+      }
+      window.__comboPrev = () => { if (combosPager.page > 1) { combosPager.page--; renderCombosPage(); } };
+      window.__comboNext = () => {
+        const pages = Math.max(1, Math.ceil(combosPager.items.length / combosPager.pageSize));
+        if (combosPager.page < pages) { combosPager.page++; renderCombosPage(); }
+      };
+
+      window.viewAllFieldCombinations = async function (idx) {
+        const boPath = foundPaths[idx]; if (!boPath) return;
+        await withLoading("Expanding field paths..", () => {
+          const uniq = new Set();
+          const combos = expandFieldsForBoPath(boPath).filter(arr => {
+            const s = arr.join(" &rarr; "); if (uniq.has(s)) return false; uniq.add(s); return true;
+          }).sort((a, b) => collator.compare(a.join(" → "), b.join(" → ")));
+          combosPager = { items: combos, page: 1, pageSize: COMBO_PAGE_SIZE };
+          renderCombosPage();
+        });
+        new bootstrap.Modal(document.getElementById("allFieldCombinationsModal")).show();
+      };
+      window.viewPathDetailsButtonClick = (btn) => viewPathDetails(decodeURIComponent(btn.dataset.path));
+
+      document.querySelectorAll('input[name="calcFieldsRadio"]').forEach(rb => {
+        rb.addEventListener('change', (e) => {
+          const v = e.target.value;
+          document.getElementById("lrvesiDiv").style.display = (v === "LRV + ESI") ? "block" : "none";
+          document.getElementById("ariDiv").style.display = (v === "ARI") ? "block" : "none";
+        });
+      });
+
+      function viewPathDetails(pathString) {
+        const pathArray = pathString.split(" &rarr; ");
+
+        function lrvesiCalcFields() {
+          let html = "";
+          if (pathArray.length > 1) {
+            html = "<table class='table table-hover table-sm table-borderless small'><tr><td colspan='2'><b>Start</b></td></tr>";
+            let currentField = pathArray[1]; let returnField;
+            for (let i = 0; i < (pathArray.length - 1) / 2; i++) {
+              returnField = pathArray[(i * 2) + 3];
+              if (returnField === undefined) { returnField = `<i>{Name of your Return Field from '${pathArray[(i * 2) + 2]}' BO}</i>`; }
+              if (currentField.indexOf('(Multi-instance)') > 0) {
+                html += `<tr><td colspan='2'><hr></td></tr>
+              <tr><td><b>Full Name</b></td><td>CF_ESI ${currentField.replace('CF_LRV ', '')}</td></tr>
+              <tr><td><b>Business Object</b></td><td>${pathArray[0]}</td></tr>
+              <tr><td><b>Function</b></td><td>Extract Single Instance</td></tr>
+              <tr><td><b>Source Field</b></td><td>${currentField}</td></tr>
+              <tr><td><b>Related Business Object</b></td><td>${pathArray[(i * 2) + 2]}</td></tr>
+              <tr><td><b>Condition</b></td><td><i>Use an existing condition or create a condition on '${pathArray[(i * 2) + 2]}' BO</i></td></tr>
+              <tr><td><b>Sort Field, Sort Direction</b></td><td><i>Enter Sort Field, Sort Direction</i></td></tr>
+              <tr><td><b>Instance to be Returned</b></td><td><i>Select First occurrence/Last occurrence/Specific occurrence</i></td></tr>`;
+                currentField = "CF_ESI " + currentField.replace('CF_LRV ', '');
+              }
+              html += `<tr><td colspan='2'><hr></td></tr>
+            <tr><td><b>Full Name</b></td><td>CF_LRV ${returnField}</td></tr>
+            <tr><td><b>Business Object</b></td><td>${pathArray[0]}</td></tr>
+            <tr><td><b>Function</b></td><td>Lookup Related Value</td></tr>
+            <tr><td><b>Lookup Field</b></td><td>${currentField}</td></tr>
+            <tr><td><b>Related Business Object</b></td><td>${pathArray[(i * 2) + 2]}</td></tr>
+            <tr><td><b>Return Value</b></td><td>${returnField}</td></tr>`;
+              currentField = "CF_LRV " + returnField;
+            }
+            html += "<tr><td colspan='2'><hr></td></tr><tr><td colspan='2'><b>End</b></td></tr></table>";
+            html = html.replace(/\(Multi-instance\)|\(Single instance\)|\(Self referencing instance\)/g, '');
+            document.getElementById("lrvesiDiv").innerHTML = html;
+          }
+        }
+
+        function ariCalcFields() {
+          let html = "";
+          if (pathArray.length > 1) {
+            html = "<table class='table table-hover table-sm table-borderless small'><tr><td colspan='2'><b>Start</b></td></tr>";
+            let currentField = pathArray[1]; let returnField;
+            for (let i = 0; i < (pathArray.length - 1) / 2; i++) {
+              returnField = pathArray[(i * 2) + 3];
+              if (returnField === undefined) { returnField = `<i>{Name of your Return Field from '${pathArray[(i * 2) + 2]}' BO}</i>`; }
+              html += `<tr><td colspan='2'><hr></td></tr>
+            <tr><td><b>Full Name</b></td><td>CF_ARI ${returnField}</td></tr>
+            <tr><td><b>Business Object</b></td><td>${pathArray[0]}</td></tr>
+            <tr><td><b>Function</b></td><td>Aggregate Related Instances</td></tr>
+            <tr><td><b>Source Field</b></td><td>${currentField}</td></tr>
+            <tr><td><b>Related Business Object</b></td><td>${pathArray[(i * 2) + 2]}</td></tr>
+            <tr><td><b>Condition</b></td><td><i>Use an existing condition or create a condition on '${pathArray[(i * 2) + 2]}' BO</i></td></tr>
+            <tr><td><b>Fields To Aggregate</b></td><td>${returnField}</td></tr>`;
+              currentField = "CF_ARI " + returnField;
+            }
+            html += "<tr><td colspan='2'><hr></td></tr><tr><td colspan='2'><b>End</b></td></tr></table>";
+            html = html.replace(/\(Multi-instance\)|\(Single instance\)|\(Self referencing instance\)/g, '');
+            document.getElementById("ariDiv").innerHTML = html;
+          }
+        }
+
+        lrvesiCalcFields(); ariCalcFields();
+        new bootstrap.Modal(document.getElementById("pathDetailModal")).show();
+      }
+
+      const searchInput = document.getElementById('search');
+      const suggestions = document.getElementById('suggestions');
+      const searchIcon = document.getElementById('search-icon');
+
+      searchInput.addEventListener('focus', () => { searchIcon.style.display = 'none'; searchInput.style.borderRadius = '4px'; }, { passive: true });
+      searchInput.addEventListener('blur', () => { searchIcon.style.display = 'inline-block'; searchInput.style.borderTopLeftRadius = '0'; searchInput.style.borderBottomLeftRadius = '0'; }, { passive: true });
+      document.addEventListener('click', (e) => { if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) suggestions.style.display = 'none'; }, { passive: true });
+
+      function locateNode(nodeId) {
+        const node = graphNodes.find(n => n.id === nodeId); if (!node) return;
+        const { width: W, height: H } = svg.node().getBoundingClientRect();
+        const t = d3.zoomIdentity.translate(W / 2 - node.x, H / 2 - node.y).scale(1.0);
+        svg.transition().duration(550).call(zoomHandler.transform, t);
+        d3.selectAll('.node').filter(d => d.id === nodeId)
+          .transition().duration(200).style('stroke', 'black').style('stroke-width', 3)
+          .transition().delay(1000).duration(300).style('stroke', '#fff').style('stroke-width', 1.5);
+      }
+
+      let debounce; let activeIndex = -1;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+          const q = searchInput.value.toLowerCase().trim();
+          if (!q) { suggestions.style.display = "none"; activeIndex = -1; return; }
+
+          const matched = allBusinessObjects
+            .filter(obj => obj.toLowerCase().includes(q))
+            .map(name => ({ name, score: scoreForQuery(name, q), rels: getRelCount(name) }))
+            .sort((a, b) => (a.score - b.score) || (b.rels - a.rels) || collator.compare(a.name, b.name));
+
+          if (!matched.length) { suggestions.style.display = "none"; activeIndex = -1; return; }
+
+          suggestions.innerHTML = '';
+          matched.forEach((m, idx) => {
+            const bo = m.name;
+            const div = document.createElement('div');
+            div.className = 'item list-group-item d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25';
+            div.setAttribute("role", "option");
+            if (idx === 0) div.classList.add('active');
+
+            const toggleItem = () => {
+              if (!graphNodes.some(n => n.id === bo)) { graphNodes.push({ id: bo }); expandNeighbors(bo); }
+              else {
+                graphNodes = graphNodes.filter(n => n.id !== bo);
+                graphLinks = graphLinks.filter(l => l.source.id !== bo && l.target.id !== bo);
+                syncAllLinksBetweenExistingNodes(); updateGraph();
+              }
+              suggestions.style.display = 'none';
+            };
+
+            div.addEventListener('click', (e) => { e.stopPropagation(); toggleItem(); });
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = bo;
+            textSpan.title = bo;
+            textSpan.style.flex = '1 1 auto';
+            textSpan.style.whiteSpace = 'nowrap';
+            textSpan.style.overflow = 'hidden';
+            textSpan.style.textOverflow = 'ellipsis';
+            div.appendChild(textSpan);
+
+            const group = document.createElement('div'); group.className = 'btn-group search-suggestions-button justify-content-end';
+            const addBtn = document.createElement('button'); addBtn.textContent = 'Add'; addBtn.className = 'btn btn-outline-success btn-sm me-2 w-100';
+            addBtn.disabled = graphNodes.some(n => n.id === bo);
+            addBtn.addEventListener('click', (e) => { e.stopPropagation(); if (!graphNodes.some(n => n.id === bo)) { graphNodes.push({ id: bo }); expandNeighbors(bo); } suggestions.style.display = 'none'; });
+
+            const removeBtn = document.createElement('button'); removeBtn.textContent = 'Remove'; removeBtn.className = 'btn btn-outline-danger btn-sm me-2 w-100';
+            removeBtn.disabled = !graphNodes.some(n => n.id === bo);
+            removeBtn.addEventListener('click', (e) => { e.stopPropagation(); graphNodes = graphNodes.filter(n => n.id !== bo); graphLinks = graphLinks.filter(l => l.source.id !== bo && l.target.id !== bo); syncAllLinksBetweenExistingNodes(); updateGraph(); suggestions.style.display = 'none'; });
+
+            const locateBtn = document.createElement('button'); locateBtn.textContent = 'Locate'; locateBtn.className = 'btn btn-outline-primary btn-sm me-2 w-100';
+            locateBtn.disabled = !graphNodes.some(n => n.id === bo);
+            locateBtn.addEventListener('click', (e) => { e.stopPropagation(); locateNode(bo); suggestions.style.display = 'none'; });
+
+            group.appendChild(addBtn); group.appendChild(removeBtn); group.appendChild(locateBtn);
+            div.appendChild(group);
+            suggestions.appendChild(div);
+          });
+
+          suggestions.style.display = 'block';
+          activeIndex = 0;
+        }, 200);
+      });
+
+      searchInput.addEventListener('keydown', (e) => {
+        if (suggestions.style.display !== 'block') return;
+        const items = Array.from(suggestions.querySelectorAll('.item'));
+        if (!items.length) return;
+        if (e.key === 'ArrowDown') { items[activeIndex]?.classList.remove('active'); activeIndex = (activeIndex + 1) % items.length; items[activeIndex].classList.add('active'); e.preventDefault(); }
+        else if (e.key === 'ArrowUp') { items[activeIndex]?.classList.remove('active'); activeIndex = (activeIndex - 1 + items.length) % items.length; items[activeIndex].classList.add('active'); e.preventDefault(); }
+        else if (e.key === 'Enter') { items[activeIndex]?.click(); e.preventDefault(); }
+      });
+
+      searchInput.addEventListener('click', () => {
+        if (searchInput.value.trim()) {
+          const evt = new Event('input', { bubbles: true });
+          searchInput.dispatchEvent(evt);
+        }
+      }, { passive: true });
+
+      ["startBO", "endBO"].forEach(id => {
+        const input = document.getElementById(id);
+        input.addEventListener('input', () => reorderDatalist(input.value));
+        input.addEventListener('focus', () => reorderDatalist(input.value));
+      });
+
+      document.getElementById("fitBtn").addEventListener("click", fitToView);
+      document.getElementById("resetBtn").addEventListener("click", () => svg.transition().duration(350).call(zoomHandler.transform, d3.zoomIdentity));
+      function fitToView() {
+        if (!graphNodes.length) return;
+        const xs = graphNodes.map(n => n.x), ys = graphNodes.map(n => n.y);
+        const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+        const padding = 80;
+        const spanX = Math.max(1, maxX - minX + padding);
+        const spanY = Math.max(1, maxY - minY + padding);
+        const { width: W, height: H } = svg.node().getBoundingClientRect();
+        const scale = Math.max(0.1, Math.min(4, 0.9 * Math.min(W / spanX, H / spanY)));
+        const tx = (W - scale * (minX + maxX)) / 2, ty = (H - scale * (minY + maxY)) / 2;
+        svg.transition().duration(550).call(zoomHandler.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+      }
+
+    }); 
+  </script>
+</body>
+
+</html>
